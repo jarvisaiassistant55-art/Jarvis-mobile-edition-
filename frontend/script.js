@@ -16,7 +16,7 @@ function appendMessage(text, type) {
 
 // ===== 3. GEMINI BRAIN (auto-fallback) =====
 async function callGemini(p) {
-  if (!API_KEY || API_KEY === 'AQ.Ab8RN6K2K2M65AEmxIQJ6YTPceHWg2kHBB0dEGtyCLS5lgI-Hw') {
+  if (!API_KEY || API_KEY === 'AQ.Ab8RN6JAo89Z74if3nnqWpUhU9ZzdmUQdZ3uJs5dI--9jPG3-w') {
     throw new Error('Add your Gemini API key in frontend/script.js before using the assistant.');
   }
 
