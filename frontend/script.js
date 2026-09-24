@@ -1,5 +1,5 @@
 // ===== 2. SMART MODELS (ఒకటిfail అయితేnext auto try) =====
-const API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+const API_KEY = "AQ.Ab8RN6JAo89Z74if3nnqWpUhU9ZzdmUQdZ3uJs5dI--9jPG3-w";
 const MODELS = ["gemini-3.6-flash", "gemini-flash-latest"];
 const chat = document.getElementById('chat');
 const input = document.getElementById('msg');
