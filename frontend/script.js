@@ -26,73 +26,81 @@ function add(text, type) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-// ===== 3. GEMINI API CALL =====
+// ===== GEMINI API CALL (FIXED) =====
 async function callGemini(promptText) {
+
   if (!API_KEY) {
-    throw new Error('No Gemini API key found. Please enter your key in the popup.');
+    throw new Error("No Gemini API key found.");
   }
+
+  const MODELS = [
+    "gemini-3.6-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro"
+  ];
 
   let lastError = null;
 
   for (const model of MODELS) {
-    try {
-      const response = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + API_KEY,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }]
-          })
+
+    for (let retry = 0; retry < 3; retry++) {
+
+      try {
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: promptText }
+                  ]
+                }
+              ]
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+
+          const message =
+            data?.error?.message ||
+            `HTTP ${response.status}`;
+
+          if (
+            message.toLowerCase().includes("high demand") ||
+            message.toLowerCase().includes("quota") ||
+            message.toLowerCase().includes("rate") ||
+            message.toLowerCase().includes("unavailable")
+          ) {
+
+            await new Promise(r => setTimeout(r, 2000));
+            continue;
+          }
+
+          throw new Error(message);
         }
-      );
 
-      const data = await response.json();
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text
+          || "No response generated.";
 
-      if (!response.ok || data.error) {
-        const message = data?.error?.message || 'Unknown API error';
-        lastError = new Error(message);
+      } catch (err) {
 
-        const shouldRetry = /high demand|temporar|quota|rate|unavailable|no longer available|deprecated|not found|model/i.test(message);
-        if (shouldRetry) {
-          continue;
-        }
+        lastError = err;
 
-        throw lastError;
+        await new Promise(r => setTimeout(r, 1500));
       }
-
-      if (!data.candidates || !data.candidates[0]?.content?.parts?.length) {
-        throw new Error('Gemini returned no response.');
-      }
-
-      return data.candidates[0].content.parts[0].text;
-    } catch (error) {
-      lastError = error;
     }
   }
 
-  throw lastError || new Error('Failed to get a response from Gemini.');
-}
-
-async function askGemini(promptText) {
-  add('J.A.R.V.I.S: Thinking...', 'ai');
-
-  try {
-    const reply = await callGemini(promptText);
-    chat.lastChild.innerText = 'J.A.R.V.I.S: ' + reply;
-    speak(reply);
-  } catch (error) {
-    chat.lastChild.innerText = 'J.A.R.V.I.S: ERROR - ' + error.message;
-  }
-}
-
-function sendMessage() {
-  const text = input.value.trim();
-  if (!text) return;
-
-  add('YOU: ' + text, 'user');
-  input.value = '';
-  askGemini(text);
+  throw lastError || new Error("All Gemini models are unavailable.");
 }
 
 // ===== 4. SPEECH RECOGNITION =====
