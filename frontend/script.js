@@ -5,42 +5,44 @@ if (!API_KEY) {
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
 
-// ===== 2. SMART MODELS =====
+// ===== 2. ACTIVE MODELS =====
 const MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash'
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash"
 ];
 
-const chat = document.getElementById('chat');
-const input = document.getElementById('msg');
-const micBtn = document.getElementById('mic-btn');
+// ===== 3. GEMINI API CALL =====
+async function callGemini(p) {
+  let lastErr;
+  for (const m of MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${API_KEY}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: p }] }] })
+      });
+      
+      const data = await res.json();
+      console.log('Gemini response data:', data); // Debug log
 
-// ===== 3. HISTORY STORAGE =====
-function getStoredHistory() {
-  try {
-    return JSON.parse(localStorage.getItem('jarvis_history') || '[]');
-  } catch {
-    return [];
+      if (data.error) {
+        lastErr = new Error(data.error.message);
+        console.warn(`Model ${m} failed:`, data.error.message);
+        continue; // Try next model
+      }
+
+      if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+        return data.candidates[0].content.parts[0].text;
+      } else {
+        throw new Error("No text response in candidate content");
+      }
+    } catch (e) {
+      lastErr = e;
+    }
   }
-}
-
-function saveHistory(history) {
-  localStorage.setItem('jarvis_history', JSON.stringify(history));
-}
-
-function loadHistory() {
-  const history = getStoredHistory();
-  if (!history.length) return;
-
-  history.forEach((item) => {
-    const d = document.createElement('div');
-    d.className = 'msg ' + (item.type || 'ai');
-    d.innerText = item.text;
-    chat.appendChild(d);
-  });
-
-  chat.scrollTop = chat.scrollHeight;
+  throw lastErr;
 }
 
 // ===== 4. GEMINI BRAIN =====
