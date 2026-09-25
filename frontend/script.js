@@ -7,7 +7,7 @@ if (!API_KEY) {
 
 // ===== 2. MODELS =====
 // Use model names currently supported by the Gemini API, with a fallback.
-const MODELS = ['gemini-2.5-flash', 'gemini-flash-latest'];
+const MODELS = ['gemini-3.6-flash', 'gemini-flash-latest'];
 const chat = document.getElementById('chat');
 const input = document.getElementById('msg');
 const sendBtn = document.getElementById('send');
