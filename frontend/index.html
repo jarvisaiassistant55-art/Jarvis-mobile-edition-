@@ -1,87 +1,64 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8"><meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>J.A.R.V.I.S.</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>J.A.R.V.I.S.</h1>
+        <p>MOBILE EDITION</p>
+    </header>
 
-<meta name="theme-color" content="#000000">
-
-<title>J.A.R.V.I.S.</title>
-
-<link rel="stylesheet" href="style.css">
-
-</head><body><header>
-    <h1>J.A.R.V.I.S.</h1>
-    <p>MOBILE EDITION</p>
-</header>
-
-<main>
-
-    <section class="core">
-        <div class="ring r1"></div>
-        <div class="ring r2"></div>
-
-        <div class="center">
-            <span>JARVIS</span>
-        </div>
-    </section>
-
-    <div class="status">
-        <p>CORE ACTIVE</p>
-    </div>
-
-    <section class="system-status">
-        <h2>SYSTEM STATUS</h2>
-
-        <div class="status-row">
-            <span>AI CORE</span>
-            <strong>ONLINE</strong>
-        </div>
-
-        <div class="status-row">
-            <span>NETWORK</span>
-            <strong>ONLINE</strong>
-        </div>
-
-        <div class="status-row">
-            <span>VOICE</span>
-            <strong>LOCKED</strong>
-        </div>
-
-        <div class="status-row">
-            <span>MEMORY</span>
-            <strong>LOCKED</strong>
-        </div>
-    </section>
-
-    <section class="chat-section">
-
-        <div id="chat">
-            <div class="message ai">
-                J.A.R.V.I.S.: Systems online.
-                How may I assist you, Boss?
+    <main>
+        <section class="core">
+            <div class="ring r1"></div>
+            <div class="ring r2"></div>
+            <div class="center">
+                <span>JARVIS</span>
             </div>
+        </section>
+
+        <div class="status">
+            <p>CORE ACTIVE</p>
         </div>
 
-        <div class="input-area">
-            <input
-                type="text"
-                id="msg"
-                placeholder="Enter command..."
-                autocomplete="off"
-            >
+        <section class="system-status">
+            <h2>SYSTEM STATUS</h2>
+            <div class="status-row">
+                <span>AI CORE</span>
+                <strong>ONLINE</strong>
+            </div>
+            <div class="status-row">
+                <span>NETWORK</span>
+                <strong>ONLINE</strong>
+            </div>
+            <div class="status-row">
+                <span>VOICE</span>
+                <strong>LOCKED</strong>
+            </div>
+            <div class="status-row">
+                <span>MEMORY</span>
+                <strong>LOCKED</strong>
+            </div>
+        </section>
 
-            <button id="send" type="button">
-                SEND
-            </button>
-        </div>
+        <section class="chat-section">
+            <div id="chat">
+                <div class="message ai">
+                    J.A.R.V.I.S.: Systems online. How may I assist you, Boss?
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="msg" placeholder="Enter command..." autocomplete="off">
+                <button id="send" type="button">SEND</button>
+            </div>
+        </section>
+    </main>
 
-    </section>
-
-</main>
-
-<script src="script.js"></script>
-
+    <script src="script.js"></script>
 </body>
 </html>
