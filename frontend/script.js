@@ -1,508 +1,173 @@
-// ============================================================
-// J.A.R.V.I.S — SEND + MIC + GEMINI + VOICE
-// ============================================================
-
-const STORAGE_KEY = "jarvis_key";
-
-let API_KEY = localStorage.getItem(STORAGE_KEY) || "";
-
+// ===== 1. API KEY SETUP =====
+let API_KEY = localStorage.getItem('jarvis_key');
 if (!API_KEY) {
-  API_KEY = prompt("Enter your Gemini API Key:") || "";
-
-  if (API_KEY) {
-    localStorage.setItem(STORAGE_KEY, API_KEY);
-  }
+  API_KEY = prompt('Enter your Gemini API Key:');
+  if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
 
+// ===== 2. SMART MODELS FALLBACK =====
+const MODELS = ["gemini-1.5-flash", "gemini-1.5-pro"];
+const chat = document.getElementById('chat');
+const input = document.getElementById('msg');
+const micBtn = document.getElementById('mic-btn');
 
-// ============================================================
-// DOM
-// ============================================================
+// ===== 3. LOCAL STORAGE HISTORY MANAGEMENT =====
+const STORAGE_KEY = 'jarvis_chat_history';
 
-const chat = document.getElementById("chat");
-const input = document.getElementById("msg");
-const sendBtn = document.getElementById("send");
-const micBtn = document.getElementById("mic-btn");
-
-
-// ============================================================
-// CHAT
-// ============================================================
-
-function add(text, type = "ai") {
-
-  if (!chat) {
-    console.error("Chat element not found");
-    return null;
-  }
-
-  const div = document.createElement("div");
-
-  div.className = "msg " + type;
-
-  div.textContent = text;
-
-  chat.appendChild(div);
-
-  chat.scrollTop = chat.scrollHeight;
-
-  return div;
+// Load stored messages or initialize empty array
+function getStoredHistory() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
 }
 
+// Save history array back to localStorage
+function saveHistory(history) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+}
 
-// ============================================================
-// GEMINI
-// ============================================================
+// Load and render history on startup
+function loadHistory() {
+  const history = getStoredHistory();
+  history.forEach(item => {
+    add(item.text, item.type, false); // false = do not append to storage again
+  });
+}
 
-async function askGemini(promptText) {
+// Clear history helper function (optional UI trigger)
+function clearHistory() {
+  localStorage.removeItem(STORAGE_KEY);
+  chat.innerHTML = '';
+}
 
-  if (!API_KEY) {
-    add(
-      "J.A.R.V.I.S: API key missing.",
-      "ai"
-    );
-    return;
+// ===== 4. GEMINI API CALL =====
+async function callGemini(p) {
+  let lastErr;
+  for (const m of MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: p }] }] })
+        }
+      );
+      const data = await res.json();
+      if (data.error) {
+        lastErr = new Error(data.error.message);
+        if (/high demand|temporary|quota|rate|unavailable|no longer available|deprecated/i.test(data.error.message)) {
+          continue;
+        }
+        throw lastErr;
+      }
+      return data.candidates[0].content.parts[0].text;
+    } catch (e) {
+      lastErr = e;
+    }
   }
+  throw lastErr;
+}
 
-  const message = add(
-    "J.A.R.V.I.S: Thinking...",
-    "ai"
-  );
-
+async function askGemini(p) {
+  add('J.A.R.V.I.S: Thinking...', 'ai', true);
   try {
-
-    const url =
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
-      encodeURIComponent(API_KEY);
-
-    const response = await fetch(url, {
-
-      method: "POST",
-
-      headers: {
-        "Content-Type": "application/json"
-      },
-
-      body: JSON.stringify({
-
-        contents: [
-          {
-            parts: [
-              {
-                text:
-`You are J.A.R.V.I.S, a futuristic personal AI assistant.
-
-Be helpful, intelligent and concise.
-
-User:
-${promptText}`
-              }
-            ]
-          }
-        ]
-
-      })
-
-    });
-
-
-    const data = await response.json();
-
-    console.log("Gemini:", data);
-
-
-    if (!response.ok) {
-
-      message.textContent =
-        "J.A.R.V.I.S: ERROR - " +
-        (data?.error?.message ||
-          "Gemini request failed");
-
-      return;
+    const reply = await callGemini(p);
+    const updatedText = 'J.A.R.V.I.S: ' + reply;
+    
+    // Update DOM element
+    chat.lastChild.innerText = updatedText;
+    
+    // Update last item in localStorage history
+    const history = getStoredHistory();
+    if (history.length > 0) {
+      history[history.length - 1].text = updatedText;
+      saveHistory(history);
     }
-
-
-    const reply =
-      data?.candidates?.[0]?.content?.parts
-        ?.map(part => part.text || "")
-        .join("")
-        .trim();
-
-
-    if (!reply) {
-
-      message.textContent =
-        "J.A.R.V.I.S: Gemini returned no response.";
-
-      return;
-    }
-
-
-    message.textContent =
-      "J.A.R.V.I.S: " + reply;
-
 
     speak(reply);
-
-  } catch (error) {
-
-    console.error(
-      "Gemini error:",
-      error
-    );
-
-    message.textContent =
-      "J.A.R.V.I.S: ERROR - " +
-      error.message;
+  } catch (e) {
+    const errText = 'J.A.R.V.I.S: ERROR - ' + e.message;
+    chat.lastChild.innerText = errText;
+    
+    // Update last item in localStorage history on error
+    const history = getStoredHistory();
+    if (history.length > 0) {
+      history[history.length - 1].text = errText;
+      saveHistory(history);
+    }
   }
 }
 
+// ===== 5. SPEECH RECOGNITION =====
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SR) {
+  const rec = new SR();
+  rec.lang = 'en-US';
 
-// ============================================================
-// SEND BUTTON
-// ============================================================
+  rec.onresult = (e) => {
+    const t = e.results[0][0].transcript;
+    add('YOU: ' + t, 'user', true);
+    askGemini(t);
+  };
 
-function sendMessage() {
+  micBtn.onclick = () => {
+    try {
+      rec.start();
+      micBtn.innerText = 'LISTENING...';
+    } catch (e) {
+      console.warn('Speech recognition active');
+    }
+  };
 
-  if (!input) {
-    console.error("Input element #msg not found");
-    return;
-  }
-
-
-  const text =
-    input.value.trim();
-
-
-  if (!text) {
-    return;
-  }
-
-
-  add(
-    "YOU: " + text,
-    "user"
-  );
-
-
-  input.value = "";
-
-
-  askGemini(text);
-}
-
-
-if (sendBtn) {
-
-  sendBtn.addEventListener(
-    "click",
-    sendMessage
-  );
-
+  rec.onend = () => { micBtn.innerText = '🎙️'; };
 } else {
-
-  console.error(
-    "SEND button #send not found"
-  );
+  micBtn.disabled = true;
+  micBtn.innerText = '🚫';
 }
 
-
-// ============================================================
-// ENTER KEY
-// ============================================================
-
-if (input) {
-
-  input.addEventListener(
-    "keydown",
-    event => {
-
-      if (event.key === "Enter") {
-
-        event.preventDefault();
-
-        sendMessage();
-      }
-
-    }
-  );
+// ===== 6. TEXT-TO-SPEECH (TTS) =====
+let voices = [];
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+}
+loadVoices();
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = loadVoices;
 }
 
-
-// ============================================================
-// MICROPHONE
-// ============================================================
-
-const SpeechRecognition =
-  window.SpeechRecognition ||
-  window.webkitSpeechRecognition;
-
-
-let recognition = null;
-
-let listening = false;
-
-
-if (SpeechRecognition && micBtn) {
-
-  recognition =
-    new SpeechRecognition();
-
-
-  // Important settings
-
-  recognition.lang = "en-US";
-
-  recognition.continuous = false;
-
-  recognition.interimResults = false;
-
-  recognition.maxAlternatives = 1;
-
-
-  // ------------------------------------------
-  // MIC START
-  // ------------------------------------------
-
-  recognition.onstart = () => {
-
-    listening = true;
-
-    micBtn.textContent =
-      "🔴 LISTENING...";
-
-    micBtn.classList.add(
-      "listening"
-    );
-
-    console.log(
-      "J.A.R.V.I.S microphone started"
-    );
-  };
-
-
-  // ------------------------------------------
-  // MIC RESULT
-  // ------------------------------------------
-
-  recognition.onresult = event => {
-
-    const transcript =
-      event.results[0][0].transcript.trim();
-
-
-    console.log(
-      "Voice:",
-      transcript
-    );
-
-
-    if (!transcript) {
-      return;
-    }
-
-
-    // Put recognized text into input
-
-    if (input) {
-      input.value = transcript;
-    }
-
-
-    add(
-      "YOU: " + transcript,
-      "user"
-    );
-
-
-    // Send directly to Gemini
-
-    askGemini(
-      transcript
-    );
-  };
-
-
-  // ------------------------------------------
-  // MIC ERROR
-  // ------------------------------------------
-
-  recognition.onerror = event => {
-
-    console.error(
-      "Microphone error:",
-      event.error
-    );
-
-
-    listening = false;
-
-
-    micBtn.textContent =
-      "🎙️";
-
-
-    micBtn.classList.remove(
-      "listening"
-    );
-
-
-    let errorText = "";
-
-
-    switch (event.error) {
-
-      case "not-allowed":
-        errorText =
-          "Microphone permission denied.";
-        break;
-
-      case "audio-capture":
-        errorText =
-          "No microphone was found.";
-        break;
-
-      case "no-speech":
-        errorText =
-          "No speech detected.";
-        break;
-
-      case "network":
-        errorText =
-          "Speech recognition network error.";
-        break;
-
-      default:
-        errorText =
-          "Microphone error: " +
-          event.error;
-    }
-
-
-    add(
-      "J.A.R.V.I.S: " + errorText,
-      "ai"
-    );
-  };
-
-
-  // ------------------------------------------
-  // MIC END
-  // ------------------------------------------
-
-  recognition.onend = () => {
-
-    listening = false;
-
-
-    micBtn.textContent =
-      "🎙️";
-
-
-    micBtn.classList.remove(
-      "listening"
-    );
-
-
-    console.log(
-      "J.A.R.V.I.S microphone stopped"
-    );
-  };
-
-
-  // ------------------------------------------
-  // MIC BUTTON
-  // ------------------------------------------
-
-  micBtn.addEventListener(
-    "click",
-    () => {
-
-      if (listening) {
-
-        recognition.stop();
-
-        return;
-      }
-
-
-      try {
-
-        recognition.start();
-
-      } catch (error) {
-
-        console.error(
-          "Could not start microphone:",
-          error
-        );
-      }
-
-    }
-  );
-
-
-} else {
-
-  console.error(
-    "SpeechRecognition is not supported in this browser."
-  );
-
-
-  if (micBtn) {
-
-    micBtn.textContent =
-      "MIC UNAVAILABLE";
-
-    micBtn.disabled = true;
-
-    micBtn.title =
-      "Speech recognition is not supported in this browser.";
-  }
-}
-
-
-// ============================================================
-// TEXT TO SPEECH
-// ============================================================
-
-function speak(text) {
-
-  if (!("speechSynthesis" in window)) {
-    return;
-  }
-
-
+function speak(t) {
+  if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
-
-
-  const utterance =
-    new SpeechSynthesisUtterance(
-      text
-    );
-
-
-  utterance.lang =
-    "en-US";
-
-  utterance.rate =
-    1.0;
-
-  utterance.pitch =
-    0.9;
-
-
-  speechSynthesis.speak(
-    utterance
-  );
+  const u = new SpeechSynthesisUtterance(t);
+  u.rate = 1.05;
+  u.pitch = 0.85;
+  const v = voices.find(v => v.lang.startsWith('en')) || voices[0];
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
 }
 
+// ===== 7. DOM HELPERS & EVENT LISTENERS =====
+document.getElementById('send').onclick = () => {
+  const t = input.value.trim();
+  if (!t) return;
+  add('YOU: ' + t, 'user', true);
+  input.value = '';
+  askGemini(t);
+};
 
-// ============================================================
-// STARTUP
-// ============================================================
+function add(text, type, shouldSave = true) {
+  const d = document.createElement('div');
+  d.className = 'msg ' + type;
+  d.innerText = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
 
-add(
-  "J.A.R.V.I.S: Systems online. How may I assist you, Boss?",
-  "ai"
-);
+  if (shouldSave) {
+    const history = getStoredHistory();
+    history.push({ text, type });
+    saveHistory(history);
+  }
+}
+
+// Initialize history load when page opens
+loadHistory();
