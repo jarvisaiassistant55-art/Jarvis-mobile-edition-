@@ -6,12 +6,21 @@ if (!API_KEY) {
 }
 
 // ===== 2. MODELS =====
-// Use model names currently supported by the Gemini API, with a fallback.
-const MODELS = ['gemini-3.6-flash', 'gemini-flash-latest'];
+// Use stable Gemini Flash models and fall back if one is busy or unavailable.
+const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-lite'];
+const MAX_ATTEMPTS_PER_MODEL = 3;
 const chat = document.getElementById('chat');
 const input = document.getElementById('msg');
 const sendBtn = document.getElementById('send');
 const micBtn = document.getElementById('mic-btn');
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function isRetryableError(error) {
+  return /high demand|temporar|quota|rate|overload|unavailable|not found|no longer available|deprecated|internal server error|too many requests/i.test(error.message);
+}
 
 // ===== 3. GEMINI BRAIN =====
 async function callGemini(promptText) {
@@ -22,35 +31,58 @@ async function callGemini(promptText) {
   let lastError = new Error('Gemini did not return a response.');
 
   for (const model of MODELS) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(API_KEY)}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-        }
-      );
+    for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_MODEL; attempt++) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(API_KEY)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+          }
+        );
 
-      const data = await response.json();
-      if (!response.ok || data.error) {
-        lastError = new Error(data.error?.message || `Request failed (${response.status})`);
-        // Try the fallback model for temporary, quota, or unavailable-model errors.
-        if (/high demand|temporar|quota|rate|unavailable|not found|no longer available|deprecated/i.test(lastError.message)) {
-          continue;
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          throw new Error(`Gemini returned an invalid response (${response.status}).`);
         }
-        throw lastError;
+
+        if (!response.ok || data.error) {
+          lastError = new Error(data.error?.message || `Request failed (${response.status})`);
+          if (!isRetryableError(lastError)) throw lastError;
+
+          // Back off before retrying temporary capacity/rate-limit failures.
+          if (attempt < MAX_ATTEMPTS_PER_MODEL - 1) {
+            await sleep(1500 * 2 ** attempt);
+            continue;
+          }
+          break;
+        }
+
+        const text = data.candidates?.[0]?.content?.parts
+          ?.map(part => part.text || '')
+          .join('')
+          .trim();
+
+        if (!text) {
+          throw new Error('Gemini returned an empty response.');
+        }
+        return text;
+      } catch (error) {
+        lastError = error;
+        if (!isRetryableError(error)) throw error;
+        if (attempt < MAX_ATTEMPTS_PER_MODEL - 1) {
+          await sleep(1500 * 2 ** attempt);
+        }
       }
-
-      const text = data.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('');
-      if (!text) throw new Error('Gemini returned an empty response.');
-      return text;
-    } catch (error) {
-      lastError = error;
     }
   }
 
-  throw lastError;
+  throw new Error(
+    'Gemini is temporarily busy. Please wait a few seconds and try again.'
+  );
 }
 
 async function askGemini(promptText) {
