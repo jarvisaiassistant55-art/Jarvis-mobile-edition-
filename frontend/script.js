@@ -5,39 +5,47 @@ if (!API_KEY) {
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
 
-// ===== 2. SMART MODELS FALLBACK =====
-const MODELS = ["gemini-1.5-flash", "gemini-1.5-pro"];
+// ===== 2. SMART MODELS (Updated active identifiers) =====
+const MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash-lite"
+];
+
 const chat = document.getElementById('chat');
 const input = document.getElementById('msg');
 const micBtn = document.getElementById('mic-btn');
 
-// ===== 3. LOCAL STORAGE HISTORY MANAGEMENT =====
-const STORAGE_KEY = 'jarvis_chat_history';
-
-// Load stored messages or initialize empty array
-function getStoredHistory() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+// ===== 3. GEMINI BRAIN =====
+async function callGemini(p) {
+  let lastErr;
+  for (const m of MODELS) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: p }] }] })
+        }
+      );
+      const data = await res.json();
+      if (data.error) {
+        lastErr = new Error(data.error.message);
+        // Fallback retry trigger for rate limits, high demand, or unavailable models
+        if (/high demand|temporary|quota|rate|unavailable|not found|deprecated/i.test(data.error.message)) {
+          continue;
+        }
+        throw lastErr;
+      }
+      return data.candidates[0].content.parts[0].text;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
-// Save history array back to localStorage
-function saveHistory(history) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-}
-
-// Load and render history on startup
-function loadHistory() {
-  const history = getStoredHistory();
-  history.forEach(item => {
-    add(item.text, item.type, false); // false = do not append to storage again
-  });
-}
-
-// Clear history helper function (optional UI trigger)
-function clearHistory() {
-  localStorage.removeItem(STORAGE_KEY);
-  chat.innerHTML = '';
-}
 
 // ===== 4. GEMINI API CALL =====
 async function callGemini(p) {
