@@ -1,31 +1,106 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>J.A.R.V.I.S</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>FRIDAY AI</title>
+
 <link rel="stylesheet" href="style.css">
-</head>
-<body>
- <header><h1>J.A.R.V.I.S</h1><p>MOBILE EDITION</p></header>
- <div class="core">
- <div class="ring r1"></div>
- <div class="ring r2"></div>
- <div class="center"></div>
- </div>
- <p class="core-text">CORE ACTIVE</p>
- <div class="status">
- <h2>SYSTEM STATUS</h2>
- <div class="row"><span>AI CORE</span><b class="on">● ONLINE</b></div>
- <div class="row"><span>NETWORK</span><b class="on">● ONLINE</b></div>
- <div class="row"><span>VOICE</span><b class="off">○ LOCKED</b></div>
- <div class="row"><span>MEMORY</span><b class="off">○ LOCKED</b></div>
- </div>
- <div class="chat" id="chat"></div>
- <div class="input-area">
- <input id="msg" placeholder="Ask J.A.R.V.I.S...">
- <button id="send">SEND</button> <button id="mic-btn">🎙️</button>
- </div>
- <script src="script.js"></script>
+
+</head><body><!-- Header -->
+<header>
+    <h1>F.R.I.D.A.Y</h1>
+    <p>PERSONAL AI ASSISTANT</p>
+</header>
+
+<!-- Main AI Core -->
+<main class="container">
+
+    <div class="status">
+        <span class="status-dot"></span>
+        SYSTEM ONLINE
+    </div>
+
+    <!-- AI Orb -->
+    <div class="ai-core">
+
+        <div class="ring ring1"></div>
+        <div class="ring ring2"></div>
+        <div class="ring ring3"></div>
+
+        <div class="orb">
+            <span>FRIDAY</span>
+        </div>
+
+    </div>
+
+    <!-- AI Message -->
+    <div class="assistant-message">
+        <p id="response">
+            Hello Boss. FRIDAY systems are online.
+        </p>
+    </div>
+
+    <!-- Voice Button -->
+    <button id="mic" class="mic-button">
+        🎤
+    </button>
+
+    <p class="voice-text">
+        TAP TO SPEAK
+    </p>
+
+    <!-- Chat -->
+    <div class="chat-container">
+
+        <div id="chat" class="chat">
+            <div class="message ai">
+                FRIDAY: How may I assist you?
+            </div>
+        </div>
+
+        <div class="input-area">
+            <input
+                type="text"
+                id="msg"
+                placeholder="Type a command..."
+                autocomplete="off"
+            >
+
+            <button id="send">
+                SEND
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Quick Commands -->
+    <div class="commands">
+
+        <button onclick="quickCommand('Open YouTube')">
+            YouTube
+        </button>
+
+        <button onclick="quickCommand('Open WhatsApp')">
+            WhatsApp
+        </button>
+
+        <button onclick="quickCommand('What time is it?')">
+            Time
+        </button>
+
+        <button onclick="quickCommand('System status')">
+            Status
+        </button>
+
+    </div>
+
+</main>
+
+<!-- Footer -->
+<footer>
+    <p>FRIDAY AI • VERSION 1.0</p>
+</footer>
+
+<script src="script.js"></script>
+
 </body>
 </html>
