@@ -1,25 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>J.A.R.V.I.S Assistant</title>
-  <style>
-    body { background: #0c1017; color: #00f0ff; font-family: monospace; padding: 20px; }
-    #chat { height: 300px; overflow-y: auto; border: 1px solid #00f0ff; padding: 10px; margin-bottom: 10px; }
-    .msg { margin: 5px 0; }
-    .user { color: #fff; }
-    .ai { color: #00f0ff; }
-    input { background: #111; color: #fff; border: 1px solid #00f0ff; padding: 8px; width: 70%; }
-    button { background: #00f0ff; color: #000; border: none; padding: 8px 12px; cursor: pointer; }
-  </style>
-</head>
-<body>
-
-<div id="chat"></div>
-<input type="text" id="msg" placeholder="Ask J.A.R.V.I.S...">
-<button id="send">Send</button>
-<button id="mic-btn">🎙️</button>
-
 <script>
 // ===== 1. API KEY SETUP =====
 let API_KEY = localStorage.getItem('jarvis_key');
