@@ -1,64 +1,223 @@
-<!DOCTYPE html>
-<html lang="en">
+
+<!doctype html>
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#000000">
-    <title>J.A.R.V.I.S.</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="description" content="J.A.R.V.I.S Mobile Edition personal AI assistant">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>J.A.R.V.I.S — Personal AI</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <header>
-        <h1>J.A.R.V.I.S.</h1>
-        <p>MOBILE EDITION</p>
+<div class="app-shell">
+
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="sidebar-top">
+      <a class="brand" href="./" aria-label="JARVIS home">
+        <span class="brand-mark" aria-hidden="true">✳</span>
+        <span class="brand-copy">
+          <strong>J.A.R.V.I.S</strong>
+          <small>PERSONAL AI</small>
+        </span>
+      </a>
+      <button class="icon-button" id="sidebar-toggle" type="button"
+        aria-label="Toggle sidebar">☰</button>
+    </div>
+
+    <button class="new-chat" id="new-chat" type="button">
+      <span class="new-chat-icon">＋</span><span>New chat</span>
+    </button>
+
+    <div class="history-heading">
+      <span>RECENT</span><span class="history-count" id="history-count">0</span>
+    </div>
+    <div class="history-list" id="history-list"
+      role="group" aria-label="Conversation history"></div>
+    <div class="sidebar-spacer"></div>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-link" id="settings-open" type="button">
+        <span>⚙</span><span>Settings</span>
+      </button>
+      <div class="profile-row">
+        <span class="profile-avatar">J</span>
+        <span class="profile-name">J.A.R.V.I.S</span>
+        <span class="profile-label">PERSONAL</span>
+      </div>
+    </div>
+  </aside>
+
+  <button class="sidebar-backdrop" id="sidebar-backdrop"
+    type="button" aria-label="Close navigation" hidden></button>
+
+  <main class="main-area">
+    <header class="topbar">
+      <button class="icon-button menu-button" id="menu-btn"
+        type="button" aria-label="Open navigation">☰</button>
+
+      <div class="topbar-title">
+        <span>J.A.R.V.I.S</span>
+        <span class="topbar-divider">/</span>
+        <span class="topbar-subtitle">Personal assistant</span>
+      </div>
+
+      <div class="topbar-actions">
+        <span class="ready-badge">
+          <span class="ready-dot"></span> READY
+        </span>
+        <button class="icon-button wake-button" id="wake-btn"
+          type="button" aria-label="Toggle wake word"
+          title="Listen for Hey Jarvis">♩</button>
+        <span id="wake-status" class="wake-status">WAKE: OFF</span>
+        <button class="icon-button clear-button" id="clear-btn"
+          type="button" aria-label="Clear current conversation"
+          title="Clear conversation">⌫</button>
+      </div>
     </header>
 
-    <main>
-        <section class="core">
-            <div class="ring r1"></div>
-            <div class="ring r2"></div>
-            <div class="center">
-                <span>JARVIS</span>
-            </div>
-        </section>
-
-        <div class="status">
-            <p>CORE ACTIVE</p>
+    <section class="conversation-stage" id="conversation-stage"
+      aria-label="Conversation">
+      <div class="welcome" id="welcome">
+        <div id="jarvis-core-container" aria-hidden="true">
+          <div class="jarvis-orb">
+            <div class="orb-ring ring-one"></div>
+            <div class="orb-ring ring-two"></div>
+            <div class="orb-ring ring-three"></div>
+            <div class="orb-core">J</div>
+          </div>
         </div>
 
-        <section class="system-status">
-            <h2>SYSTEM STATUS</h2>
-            <div class="status-row">
-                <span>AI CORE</span>
-                <strong>ONLINE</strong>
-            </div>
-            <div class="status-row">
-                <span>NETWORK</span>
-                <strong>ONLINE</strong>
-            </div>
-            <div class="status-row">
-                <span>VOICE</span>
-                <strong>LOCKED</strong>
-            </div>
-            <div class="status-row">
-                <span>MEMORY</span>
-                <strong>LOCKED</strong>
-            </div>
-        </section>
+        <div class="welcome-copy">
+          <p class="eyebrow"><span></span> YOUR PERSONAL AI</p>
+          <h1>How can I help today?</h1>
+          <p class="welcome-subtitle">
+            Ideas, answers and everyday tasks — all in one place.
+          </p>
+        </div>
 
-        <section class="chat-section">
-            <div id="chat">
-                <div class="message ai">
-                    J.A.R.V.I.S.: Systems online. How may I assist you, Boss?
-                </div>
-            </div>
-            <div class="input-area">
-                <input type="text" id="msg" placeholder="Enter command..." autocomplete="off">
-                <button id="send" type="button">SEND</button>
-            </div>
-        </section>
-    </main>
+        <div class="prompt-grid" aria-label="Suggested prompts">
+          <button class="prompt-card" type="button"
+            data-prompt="Give me a morning briefing">
+            <span class="prompt-icon">✦</span>
+            <span><strong>Morning briefing</strong>
+              <small>Start your day informed</small></span>
+            <span class="prompt-arrow">↗</span>
+          </button>
 
-    <script src="script.js"></script>
+          <button class="prompt-card" type="button"
+            data-prompt="Tell me how I can check today's weather">
+            <span class="prompt-icon">◌</span>
+            <span><strong>Check the weather</strong>
+              <small>Get weather guidance</small></span>
+            <span class="prompt-arrow">↗</span>
+          </button>
+
+          <button class="prompt-card" type="button"
+            data-prompt="Explain the current Bitcoin market and tell me if you have live data">
+            <span class="prompt-icon">◇</span>
+            <span><strong>Market snapshot</strong>
+              <small>Explore Bitcoin</small></span>
+            <span class="prompt-arrow">↗</span>
+          </button>
+
+          <button class="prompt-card" type="button"
+            data-prompt="Tell me a useful idea for today">
+            <span class="prompt-icon">⌁</span>
+            <span><strong>Explore an idea</strong>
+              <small>Think something through</small></span>
+            <span class="prompt-arrow">↗</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="chat" id="chat" role="log"
+        aria-label="Chat messages" aria-live="polite"
+        aria-relevant="additions text"></div>
+    </section>
+
+    <footer class="composer-dock">
+      <div class="thinking-status" id="thinking-status"
+        aria-live="polite" hidden>
+        <span class="thinking-orb"><i class="thinking-ring"></i>
+          <i class="thinking-core"></i></span>
+        <span id="thinking-label">J.A.R.V.I.S is thinking</span>
+        <span class="thinking-dots"><i></i><i></i><i></i></span>
+      </div>
+
+      <div class="composer-shell">
+        <button class="composer-tool" id="cam-btn" type="button"
+          aria-label="Attach an image" title="Attach an image">＋</button>
+
+        <textarea id="msg" rows="1" maxlength="12000"
+          placeholder="Message J.A.R.V.I.S..."
+          aria-label="Message J.A.R.V.I.S"></textarea>
+
+        <input id="img-input" type="file" accept="image/*" hidden>
+
+        <div class="composer-actions">
+          <button class="composer-tool voice-button" id="mic-btn"
+            type="button" aria-label="Voice input"
+            title="Voice input">🎙</button>
+          <button class="send-button" id="send" type="button"
+            aria-label="Send message" title="Send message">↑</button>
+        </div>
+      </div>
+      <p class="composer-note">
+        ENTER TO SEND <span>·</span> SHIFT + ENTER FOR A NEW LINE
+        <span class="note-separator">·</span> J.A.R.V.I.S can make mistakes
+      </p>
+    </footer>
+  </main>
+
+  <div class="settings-scrim" id="settings-scrim" hidden></div>
+  <aside class="settings-panel" id="settings-panel"
+    aria-labelledby="settings-title" aria-modal="true"
+    role="dialog" hidden>
+    <div class="settings-header">
+      <div><p class="eyebrow">PREFERENCES</p><h2 id="settings-title">Settings</h2></div>
+      <button class="icon-button" id="settings-close"
+        type="button" aria-label="Close settings">×</button>
+    </div>
+
+    <div class="settings-group">
+      <label for="theme-select">Appearance</label>
+      <p>Set the tone of your workspace.</p>
+      <select id="theme-select">
+        <option value="dark">Midnight · dark</option>
+        <option value="light">Silver · light</option>
+      </select>
+    </div>
+
+    <div class="settings-group">
+      <label for="api-key-input">Gemini API key</label>
+      <p>Stored in this browser only. Do not use a private key on a public website.</p>
+      <input id="api-key-input" type="password"
+        autocomplete="off" placeholder="Paste your API key">
+      <button class="settings-action" id="save-key-btn"
+        type="button">Save API key</button>
+      <button class="settings-action" id="remove-key-btn"
+        type="button">Remove API key</button>
+    </div>
+
+    <div class="settings-group">
+      <strong>Conversation history</strong>
+      <p>Chats are saved locally in this browser.</p>
+    </div>
+
+    <div class="settings-bottom">
+      <button class="danger-button" id="clear-memory-setting"
+        type="button">Clear current conversation</button>
+      <p>J.A.R.V.I.S · Mobile Edition</p>
+    </div>
+  </aside>
+</div>
+
+<script src="./script.js" defer></script>
 </body>
 </html>
