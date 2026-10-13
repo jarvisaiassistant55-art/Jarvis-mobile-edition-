@@ -288,3 +288,26 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+@media (min-width: 761px) {
+  .sidebar.sidebar-collapsed {
+    width: 76px;
+    flex-basis: 76px;
+    padding-inline: 10px;
+  }
+
+  .sidebar.sidebar-collapsed .brand-copy,
+  .sidebar.sidebar-collapsed .new-chat > span:not(.new-chat-icon),
+  .sidebar.sidebar-collapsed .history-heading,
+  .sidebar.sidebar-collapsed .history-list,
+  .sidebar.sidebar-collapsed .sidebar-link > span:not(:first-child),
+  .sidebar.sidebar-collapsed .profile-name,
+  .sidebar.sidebar-collapsed .profile-label {
+    display: none;
+  }
+
+  .sidebar.sidebar-collapsed .brand,
+  .sidebar.sidebar-collapsed .new-chat,
+  .sidebar.sidebar-collapsed .sidebar-link {
+    justify-content: center;
+  }
+}
